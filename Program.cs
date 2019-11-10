@@ -6,7 +6,7 @@ namespace StackOverflowPost
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+
         }
     }
 }
