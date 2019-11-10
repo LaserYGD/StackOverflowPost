@@ -4,30 +4,29 @@ namespace StackOverflowPost
 {
     public class ProgramController
     {
-        private string _userCommand;
-        private string _createCommand = "create";
-        private string _upVoteCommand = "+1";
-        private string _downVoteCommand = "-1";
-        private string _exitCommand = "exit";
+        private static string _createCommand = "create";
+        private static string _upVoteCommand = "+1";
+        private static string _downVoteCommand = "-1";
+        private static string _exitCommand = "exit";
 
         public static string UserCommand { get; set; }
 
-        public string CreateCommand
+        public static string CreateCommand
         {
             get { return _createCommand; }
         }
 
-        public string UpVoteCommand
+        public static string UpVoteCommand
         {
             get { return _upVoteCommand; }
         }
 
-        public string DownVoteCommand
+        public static string DownVoteCommand
         {
             get { return _downVoteCommand; }
         }
 
-        public string ExitCommand
+        public static string ExitCommand
         {
             get { return _exitCommand; }
         }
@@ -36,6 +35,26 @@ namespace StackOverflowPost
         {
             var input = Console.ReadLine();
             UserCommand = input.ToLower();
+        }
+
+        public static bool ValidateUserCommand()
+        {
+            if (String.IsNullOrWhiteSpace(UserCommand))
+            {
+                return false;
+            }
+
+            var isCreate = UserCommand == _createCommand;
+            var isUpVote = UserCommand == _upVoteCommand;
+            var isDownVote = UserCommand == _downVoteCommand;
+            var isExit = UserCommand == _exitCommand;
+
+            if ((!isCreate) || (!isUpVote) || (!isDownVote) || (!isExit))
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }
