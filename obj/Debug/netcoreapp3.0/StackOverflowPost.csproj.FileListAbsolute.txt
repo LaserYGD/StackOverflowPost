@@ -1,0 +1,11 @@
+E:\Courses_C#\InterMediateExercises\Classes\StackOverflowPost\bin\Debug\netcoreapp3.0\StackOverflowPost.exe
+E:\Courses_C#\InterMediateExercises\Classes\StackOverflowPost\bin\Debug\netcoreapp3.0\StackOverflowPost.deps.json
+E:\Courses_C#\InterMediateExercises\Classes\StackOverflowPost\bin\Debug\netcoreapp3.0\StackOverflowPost.runtimeconfig.json
+E:\Courses_C#\InterMediateExercises\Classes\StackOverflowPost\bin\Debug\netcoreapp3.0\StackOverflowPost.runtimeconfig.dev.json
+E:\Courses_C#\InterMediateExercises\Classes\StackOverflowPost\bin\Debug\netcoreapp3.0\StackOverflowPost.dll
+E:\Courses_C#\InterMediateExercises\Classes\StackOverflowPost\bin\Debug\netcoreapp3.0\StackOverflowPost.pdb
+E:\Courses_C#\InterMediateExercises\Classes\StackOverflowPost\obj\Debug\netcoreapp3.0\StackOverflowPost.csprojAssemblyReference.cache
+E:\Courses_C#\InterMediateExercises\Classes\StackOverflowPost\obj\Debug\netcoreapp3.0\StackOverflowPost.AssemblyInfoInputs.cache
+E:\Courses_C#\InterMediateExercises\Classes\StackOverflowPost\obj\Debug\netcoreapp3.0\StackOverflowPost.AssemblyInfo.cs
+E:\Courses_C#\InterMediateExercises\Classes\StackOverflowPost\obj\Debug\netcoreapp3.0\StackOverflowPost.dll
+E:\Courses_C#\InterMediateExercises\Classes\StackOverflowPost\obj\Debug\netcoreapp3.0\StackOverflowPost.pdb
