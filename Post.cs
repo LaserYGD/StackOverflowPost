@@ -2,7 +2,7 @@ using System;
 
 namespace StackOverflowPost
 {
-    public class Post
+    public class Post : IPostController
     {
         private readonly DateTime _creationDate = new DateTime();
         private int _votesCount = 0;

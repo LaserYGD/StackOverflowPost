@@ -4,13 +4,19 @@ namespace StackOverflowPost
 {
     public class ProgramController
     {
-        private static string _createCommand = "create";
-        private static string _upVoteCommand = "+1";
-        private static string _downVoteCommand = "-1";
-        private static string _exitCommand = "exit";
+        private string _userCommand;
+        private const string _createCommand = "create";
+        private const string _upVoteCommand = "+1";
+        private const string _downVoteCommand = "-1";
+        private const string _exitCommand = "exit";
+        private IPostEditor _postEditor;
+        private IPostController _postController;
 
         #region Properties
-        public static string UserCommand { get; set; }
+        public string UserCommand
+        {
+            get { return _userCommand; }
+        }
 
         public static string CreateCommand
         {
@@ -31,43 +37,35 @@ namespace StackOverflowPost
         {
             get { return _exitCommand; }
         }
+
+        public IPostController RegisterPost
+        {
+            set { _postController = value; }
+        }
         #endregion
+
+        public ProgramController(IPostEditor postEditor)
+        {
+            _postEditor = postEditor;
+        }
 
         #region Private Methods
-        private static void ProcessUpVote(Post post)
-        {
-            if (CommandIsUpVote())
-            {
-                post.UpVote();
-            }
-        }
-
-        private static void ProcessDownVote(Post post)
-        {
-            if (CommandIsDownVote())
-            {
-                post.DownVote();
-            }
-        }
-        #endregion
-
-        #region Public methods
-        public static void GetUserCommand()
+        private void GetUserCommand()
         {
             var input = Console.ReadLine();
-            UserCommand = input.ToLower();
+            _userCommand = input.ToLower();
         }
 
-        public static bool CommandIsValid()
+        private bool CommandIsValid()
         {
-            if (String.IsNullOrWhiteSpace(UserCommand))
+            if (String.IsNullOrWhiteSpace(_userCommand))
             {
                 return false;
             }
 
-            var isCreate = UserCommand == _createCommand;
-            var isVote = UserCommand == _upVoteCommand || UserCommand == _downVoteCommand;
-            var isExit = UserCommand == _exitCommand;
+            var isCreate = _userCommand == _createCommand;
+            var isVote = _userCommand == _upVoteCommand || _userCommand == _downVoteCommand;
+            var isExit = _userCommand == _exitCommand;
 
             if (!(isCreate || isVote || isExit))
             {
@@ -77,58 +75,132 @@ namespace StackOverflowPost
             return true;
         }
 
-        public static bool CommandIsCreate()
+        private string EnterTitle()
         {
-            return UserCommand == _createCommand;
+            return Console.ReadLine();
         }
 
-        public static bool CommandIsUpVote()
+        private string EnterDescription()
         {
-            return UserCommand == _upVoteCommand;
+            return Console.ReadLine();
         }
 
-        public static bool CommandIsDownVote()
+        private void ProcessUserCommand()
         {
-            return UserCommand == _downVoteCommand;
-        }
+            GetUserCommand();
 
-        public static bool CommandIsExit()
-        {
-            return UserCommand == _exitCommand;
-        }
+            var isValid = CommandIsValid();
 
-        public static Post CreatePost(Post post)
-        {
-            var title = "My first post on Stack Overflow!";
-            var description = "Some insteresting stupid queston.";
-
-            if (post == null)
+            if (isValid)
             {
-                if (ProgramController.CommandIsCreate())
+                switch (_userCommand)
                 {
-                    post = new Post(title, description);
-                    System.Console.WriteLine("Post '{0}' is created.", post.Title);
+                    case (_createCommand):
+                        OnCreateCommand();
+                        System.Console.WriteLine("Please enter title");
+                        var title = EnterTitle();
+                        System.Console.WriteLine("Please enter description");
+                        var description = EnterDescription();
+                        _postEditor.CreatePost(title, description);
+                        break;
+
+                    case (_upVoteCommand):
+                        OnUpVoteCommand();
+                        _postController.UpVote();
+                        break;
+
+                    case (_downVoteCommand):
+                        OnDownVoteCommand();
+                        _postController.DownVote();
+                        break;
+
+                    case (_exitCommand):
+                        OnExitCommand();
+                        break;
                 }
             }
-            else if (ProgramController.CommandIsCreate())
+            else
             {
-                System.Console.WriteLine("Post '{0}' is already created", post.Title);
+                OnInvalidCommand();
             }
+        }
+        #endregion
 
-            return post;
+        #region Events
+        public event EventHandler InvalidCommand;
+
+        protected virtual void OnInvalidCommand()
+        {
+            if (InvalidCommand != null)
+            {
+                InvalidCommand(this, EventArgs.Empty);
+            }
         }
 
-        public static void VoteForPost(Post post)
+        public event EventHandler CommandCreate;
+
+        protected virtual void OnCreateCommand()
         {
-            if (post != null)
+            if (CommandCreate != null)
             {
-                ProcessUpVote(post);
-                ProcessDownVote(post);
+                CommandCreate(this, EventArgs.Empty);
             }
-            else if (CommandIsUpVote() || CommandIsDownVote())
+        }
+
+        public event EventHandler CommandUpVote;
+
+        protected virtual void OnUpVoteCommand()
+        {
+            if (CommandUpVote != null)
             {
-                System.Console.WriteLine("Please, create a new post.");
+                CommandUpVote(this, EventArgs.Empty);
             }
+        }
+
+        public event EventHandler CommandDownVote;
+
+        protected virtual void OnDownVoteCommand()
+        {
+            if (CommandDownVote != null)
+            {
+                CommandDownVote(this, EventArgs.Empty);
+            }
+        }
+
+        public event EventHandler CommandExit;
+
+        protected virtual void OnExitCommand()
+        {
+            if (CommandExit != null)
+            {
+                CommandExit(this, EventArgs.Empty);
+            }
+        }
+        #endregion
+
+        #region Public methods
+        public void ProcessSite()
+        {
+            while (true)
+            {
+                ProcessUserCommand();
+
+                if (!CommandIsValid())
+                {
+                    continue;
+                }
+
+                if (_userCommand == _exitCommand)
+                {
+                    break;
+                }
+            }
+        }
+
+        public void OnPostCreation(object source, EventArgs empty)
+        {
+            _postController = _postEditor.NewPost;
+            System.Console.WriteLine("Post registered");
         }
         #endregion
     }

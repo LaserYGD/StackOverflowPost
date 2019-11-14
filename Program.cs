@@ -6,7 +6,10 @@ namespace StackOverflowPost
     {
         static void Main(string[] args)
         {
-            Post post = null;
+            var postEditor = new PostEditor();
+            var programController = new ProgramController(postEditor);
+
+            postEditor.PostCreation += programController.OnPostCreation;
 
             string create = ConvertCommand(ProgramController.CreateCommand);
             string upVote = ProgramController.UpVoteCommand;
@@ -18,27 +21,7 @@ namespace StackOverflowPost
             System.Console.WriteLine("'{0}' to downvote.", downVote);
             System.Console.WriteLine("'{0}' to close the program.", exit);
 
-            while (true)
-            {
-                ProgramController.GetUserCommand();
-
-                if (!ProgramController.CommandIsValid())
-                {
-                    System.Console.WriteLine("Invalid command. Use '{0}', '{1}', '{2}' or '{3}'.", create, upVote, downVote, exit);
-                    continue;
-                }
-
-                post = ProgramController.CreatePost(post);
-
-                ProgramController.VoteForPost(post);
-
-                if (ProgramController.CommandIsExit())
-                {
-                    break;
-                }
-            }
-
-            ShowResultVotes(post);
+            programController.ProcessSite();
         }
 
         private static string ConvertCommand(string command)
