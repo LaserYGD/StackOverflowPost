@@ -8,25 +8,23 @@ namespace StackOverflowPost
         {
             var postEditor = new PostEditor();
             var programController = new ProgramController(postEditor);
+            var messageHandler = new MessageHandler();
 
             postEditor.PostCreation += programController.OnPostCreation;
+            postEditor.PostCreation += messageHandler.OnPostCreation;
 
-            string create = ConvertCommand(ProgramController.CreateCommand);
-            string upVote = ProgramController.UpVoteCommand;
-            string downVote = ProgramController.DownVoteCommand;
-            string exit = ConvertCommand(ProgramController.ExitCommand);
+            programController.InvalidCommand += messageHandler.OnInvalidCommand;
+            programController.CreateTitle += messageHandler.OnCreateTitle;
+            programController.CreateDescription += messageHandler.OnCreateDescription;
+            programController.PostExists += messageHandler.OnPostExists;
+            programController.PostNotFound += messageHandler.OnPostNotFound;
+            programController.CommandUpVote += messageHandler.OnUpVoteCommand;
+            programController.CommandDownVote += messageHandler.OnDownVoteCommand;
+            programController.ShowVotes += messageHandler.OnShowVotes;
 
-            System.Console.WriteLine("'{0}' to create a new post.", create);
-            System.Console.WriteLine("'{0}' to upvote.", upVote);
-            System.Console.WriteLine("'{0}' to downvote.", downVote);
-            System.Console.WriteLine("'{0}' to close the program.", exit);
+            messageHandler.ShowInstructions();
 
             programController.ProcessSite();
-        }
-
-        private static string ConvertCommand(string command)
-        {
-            return char.ToUpper(command[0]) + command.ToLower().Substring(1);
         }
 
         private static void ShowResultVotes(Post post)

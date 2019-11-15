@@ -2,29 +2,27 @@ using System;
 
 namespace StackOverflowPost
 {
+    public class NewPostArgs : EventArgs
+    {
+        public Post Post { get; set; }
+        public string Title { get; set; }
+    }
+
     public class PostEditor : IPostEditor
     {
-        private Post _newPost;
-
-        public Post NewPost
-        {
-            get { return _newPost; }
-        }
-
         public void CreatePost(string title, string description)
         {
-            _newPost = new Post(title, description);
-            System.Console.WriteLine("PostCreated");
-            OnPostCreation();
+            var newPost = new Post(title, description);
+            OnPostCreation(newPost);
         }
 
-        public event EventHandler PostCreation;
-
-        protected virtual void OnPostCreation()
+        public delegate void PostCreationHandler(object source, NewPostArgs args);
+        public event PostCreationHandler PostCreation;
+        protected virtual void OnPostCreation(Post post)
         {
             if (PostCreation != null)
             {
-                PostCreation(this, EventArgs.Empty);
+                PostCreation(this, new NewPostArgs() { Post = post, Title = post.Title });
             }
         }
     }

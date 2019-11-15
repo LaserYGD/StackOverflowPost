@@ -1,15 +1,26 @@
 using System;
+using System.Collections.Generic;
 
 namespace StackOverflowPost
 {
+    public class PostHandlerArgs : EventArgs
+    {
+        public Post Post { get; set; }
+        public string Title { get; set; }
+        public int Votes { get; set; }
+    }
+
     public class ProgramController
     {
         private string _userCommand;
         private const string _createCommand = "create";
         private const string _upVoteCommand = "+1";
         private const string _downVoteCommand = "-1";
+        private const string _votesCommand = "votes";
         private const string _exitCommand = "exit";
+        private List<string> commands;
         private IPostEditor _postEditor;
+        private Post _currentPost;
         private IPostController _postController;
 
         #region Properties
@@ -33,6 +44,11 @@ namespace StackOverflowPost
             get { return _downVoteCommand; }
         }
 
+        public static string VotesCommand
+        {
+            get { return _votesCommand; }
+        }
+
         public static string ExitCommand
         {
             get { return _exitCommand; }
@@ -47,9 +63,49 @@ namespace StackOverflowPost
         public ProgramController(IPostEditor postEditor)
         {
             _postEditor = postEditor;
+            commands = new List<string>();
         }
 
         #region Private Methods
+        private void ProcessUserCommand()
+        {
+            FormListOfCommands();
+
+            GetUserCommand();
+
+            var isValid = CommandIsValid();
+
+            if (isValid)
+            {
+                switch (_userCommand)
+                {
+                    case (_createCommand):
+                        ProcessCreateCommand();
+                        break;
+
+                    case (_upVoteCommand):
+                        ProcessUpVoteCommand();
+                        break;
+
+                    case (_downVoteCommand):
+                        ProcessDownVote();
+                        break;
+
+                    case (_votesCommand):
+                        ProcessVotesCommand();
+                        break;
+
+                    case (_exitCommand):
+                        ProcessExitCommand();
+                        break;
+                }
+            }
+            else
+            {
+                OnInvalidCommand();
+            }
+        }
+
         private void GetUserCommand()
         {
             var input = Console.ReadLine();
@@ -63,72 +119,105 @@ namespace StackOverflowPost
                 return false;
             }
 
-            var isCreate = _userCommand == _createCommand;
-            var isVote = _userCommand == _upVoteCommand || _userCommand == _downVoteCommand;
-            var isExit = _userCommand == _exitCommand;
-
-            if (!(isCreate || isVote || isExit))
+            foreach (var command in commands)
             {
-                return false;
+                if (_userCommand == command)
+                {
+                    return true;
+                }
             }
 
-            return true;
+            return false;
         }
 
-        private string EnterTitle()
+        private void FormListOfCommands()
         {
-            return Console.ReadLine();
-        }
-
-        private string EnterDescription()
-        {
-            return Console.ReadLine();
-        }
-
-        private void ProcessUserCommand()
-        {
-            GetUserCommand();
-
-            var isValid = CommandIsValid();
-
-            if (isValid)
+            if (commands.Count == 0)
             {
-                switch (_userCommand)
-                {
-                    case (_createCommand):
-                        OnCreateCommand();
-                        System.Console.WriteLine("Please enter title");
-                        var title = EnterTitle();
-                        System.Console.WriteLine("Please enter description");
-                        var description = EnterDescription();
-                        _postEditor.CreatePost(title, description);
-                        break;
+                commands.Add(_createCommand);
+                commands.Add(_upVoteCommand);
+                commands.Add(_downVoteCommand);
+                commands.Add(_votesCommand);
+                commands.Add(_exitCommand);
+            }
+        }
 
-                    case (_upVoteCommand):
-                        OnUpVoteCommand();
-                        _postController.UpVote();
-                        break;
+        private string EnterData()
+        {
+            return Console.ReadLine();
+        }
 
-                    case (_downVoteCommand):
-                        OnDownVoteCommand();
-                        _postController.DownVote();
-                        break;
-
-                    case (_exitCommand):
-                        OnExitCommand();
-                        break;
-                }
+        private void ProcessDownVote()
+        {
+            if (_postController != null)
+            {
+                OnDownVoteCommand(_currentPost);
+                _postController.DownVote();
             }
             else
             {
-                OnInvalidCommand();
+                OnPostNotFound();
             }
+        }
+
+        private void ProcessUpVoteCommand()
+        {
+            if (_postController != null)
+            {
+                OnUpVoteCommand(_currentPost);
+                _postController.UpVote();
+            }
+            else
+            {
+                OnPostNotFound();
+            }
+        }
+
+        private void ProcessCreateCommand()
+        {
+            if (_postController == null)
+            {
+                OnCreateCommand();
+
+                OnCreateTitle();
+                var title = EnterData();
+
+                OnCreateDescription();
+                var description = EnterData();
+
+                _postEditor.CreatePost(title, description);
+            }
+            else
+            {
+                OnPostExists();
+            }
+        }
+
+        private void ProcessVotesCommand()
+        {
+            if (_currentPost != null)
+            {
+                OnShowVotes(_currentPost);
+            }
+            else
+            {
+                OnPostNotFound();
+            }
+        }
+
+        private void ProcessExitCommand()
+        {
+            if (_currentPost != null)
+            {
+                OnShowVotes(_currentPost);
+            }
+
+            OnExitCommand();
         }
         #endregion
 
         #region Events
         public event EventHandler InvalidCommand;
-
         protected virtual void OnInvalidCommand()
         {
             if (InvalidCommand != null)
@@ -138,7 +227,6 @@ namespace StackOverflowPost
         }
 
         public event EventHandler CommandCreate;
-
         protected virtual void OnCreateCommand()
         {
             if (CommandCreate != null)
@@ -147,33 +235,78 @@ namespace StackOverflowPost
             }
         }
 
-        public event EventHandler CommandUpVote;
-
-        protected virtual void OnUpVoteCommand()
+        public delegate void PostDataHandler(object source, PostHandlerArgs args);
+        public event PostDataHandler CommandUpVote;
+        protected virtual void OnUpVoteCommand(Post post)
         {
             if (CommandUpVote != null)
             {
-                CommandUpVote(this, EventArgs.Empty);
+                CommandUpVote(this, new PostHandlerArgs() { Title = post.Title });
             }
         }
 
-        public event EventHandler CommandDownVote;
-
-        protected virtual void OnDownVoteCommand()
+        public event PostDataHandler CommandDownVote;
+        protected virtual void OnDownVoteCommand(Post post)
         {
             if (CommandDownVote != null)
             {
-                CommandDownVote(this, EventArgs.Empty);
+                CommandDownVote(this, new PostHandlerArgs() { Title = post.Title });
+            }
+        }
+
+        public event PostDataHandler ShowVotes;
+        protected virtual void OnShowVotes(Post post)
+        {
+            if (ShowVotes != null)
+            {
+                ShowVotes(this, new PostHandlerArgs() { Title = post.Title, Votes = post.Votes });
             }
         }
 
         public event EventHandler CommandExit;
-
         protected virtual void OnExitCommand()
         {
             if (CommandExit != null)
             {
                 CommandExit(this, EventArgs.Empty);
+            }
+        }
+
+        public event EventHandler CreateTitle;
+        protected virtual void OnCreateTitle()
+        {
+            if (CreateTitle != null)
+            {
+                CreateTitle(this, EventArgs.Empty);
+            }
+        }
+
+        public event EventHandler CreateDescription;
+
+        protected virtual void OnCreateDescription()
+        {
+            if (CreateDescription != null)
+            {
+                CreateDescription(this, EventArgs.Empty);
+            }
+        }
+
+        public event EventHandler PostExists;
+
+        protected virtual void OnPostExists()
+        {
+            if (PostExists != null)
+            {
+                PostExists(this, EventArgs.Empty);
+            }
+        }
+
+        public event EventHandler PostNotFound;
+        protected virtual void OnPostNotFound()
+        {
+            if (PostNotFound != null)
+            {
+                PostNotFound(this, EventArgs.Empty);
             }
         }
         #endregion
@@ -197,10 +330,10 @@ namespace StackOverflowPost
             }
         }
 
-        public void OnPostCreation(object source, EventArgs empty)
+        public void OnPostCreation(object source, NewPostArgs args)
         {
-            _postController = _postEditor.NewPost;
-            System.Console.WriteLine("Post registered");
+            _currentPost = args.Post;
+            _postController = args.Post;
         }
         #endregion
     }
